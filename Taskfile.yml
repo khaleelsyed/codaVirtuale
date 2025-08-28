@@ -8,7 +8,7 @@ dotenv: ['.env']
 tasks:
   build:
     cmds:
-      - go build -o .bin/{{.BINARY_NAME}}
+      - go build -C cmd/app -o ../../.bin/{{.BINARY_NAME}}
   
   run: 
     cmds:
