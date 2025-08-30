@@ -1,13 +1,26 @@
 package storage
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 var errNotImplemented = errors.New("feature not implemented yet")
 
 type MockStorage struct{}
 
 func (s MockStorage) CallNextTicket(desk Desk) (Ticket, error) {
-	return Ticket{}, errNotImplemented
+
+	return Ticket{
+		ID:          2,
+		CategoryID:  desk.CategoryID,
+		SubURL:      "frjikll23l",
+		QueueNumber: 2,
+		DeskID:      desk.ID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
 }
 
 func (s MockStorage) LastCalled(category Category, positions int) ([]Ticket, error) {
@@ -47,7 +60,11 @@ func (s MockStorage) CreateDesk(label string, category Category) (Desk, error) {
 }
 
 func (s MockStorage) GetDesk(id int) (Desk, error) {
-	return Desk{}, errNotImplemented
+	return Desk{
+		ID:         id,
+		CategoryID: 1,
+		Label:      fmt.Sprintf("desk %i", id),
+	}, nil
 }
 
 func (s MockStorage) UpdateDesk(id int, label string) (Desk, error) {
