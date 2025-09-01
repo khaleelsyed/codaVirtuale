@@ -1,6 +1,14 @@
 package api
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var errBadID = errors.New("bad ID received")
+var errBadRequestBody = errors.New("bad request body")
+var errValidationError = errors.New("error validating ")
 var errNotFound = errors.New("not found")
+
+func badValidationString(object_type string) string {
+	return fmt.Sprintf("error validating %s", object_type)
+}

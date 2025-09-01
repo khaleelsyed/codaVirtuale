@@ -3,10 +3,10 @@ package api
 import "github.com/khaleelsyed/codaVirtuale/internal/storage"
 
 type Storage interface {
-	CallNextTicket(desk storage.Desk) (storage.Ticket, error)
+	CallNextTicket(deskID int) (storage.Ticket, error)
 	LastCalled(categoryID int, positions int) ([]storage.Ticket, error)
-	SeeNext(category storage.Category) (storage.Ticket, error)
-	SeeQueue(category storage.Category) ([]storage.Ticket, error)
+	SeeNext(categoryID int) (storage.Ticket, error)
+	SeeQueue(categoryID int) ([]storage.Ticket, error)
 
 	CreateTicket(category storage.Category) (storage.Ticket, error)
 

@@ -10,14 +10,14 @@ var errNotImplemented = errors.New("feature not implemented yet")
 
 type MockStorage struct{}
 
-func (s MockStorage) CallNextTicket(desk Desk) (Ticket, error) {
+func (s MockStorage) CallNextTicket(deskID int) (Ticket, error) {
 
 	return Ticket{
 		ID:          2,
-		CategoryID:  desk.CategoryID,
+		CategoryID:  4,
 		SubURL:      "frjikll23l",
 		QueueNumber: 2,
-		DeskID:      desk.ID,
+		DeskID:      deskID,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}, nil
@@ -102,11 +102,20 @@ func (s MockStorage) LastCalled(categoryID int, positions int) ([]Ticket, error)
 	return tickets[:positions], nil
 }
 
-func (s MockStorage) SeeNext(category Category) (Ticket, error) {
-	return Ticket{}, errNotImplemented
+func (s MockStorage) SeeNext(categoryID int) (Ticket, error) {
+
+	return Ticket{
+		ID:          2,
+		CategoryID:  categoryID,
+		SubURL:      "frjikll23l",
+		QueueNumber: 2,
+		DeskID:      4,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
 }
 
-func (s MockStorage) SeeQueue(category Category) ([]Ticket, error) {
+func (s MockStorage) SeeQueue(categoryID int) ([]Ticket, error) {
 	return []Ticket{}, errNotImplemented
 }
 
