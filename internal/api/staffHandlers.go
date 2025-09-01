@@ -3,16 +3,17 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 func (s *APIServer) addStaffRoutes(router *mux.Router) {
-	router.HandleFunc("/next", makeHTTPHandler(s.PutNextTicket, []string{http.MethodPut}, s.logger))
+	router.HandleFunc("/next", makeHTTPHandler(s.HandleNext, []string{http.MethodPut, http.MethodGet}, s.logger))
 	router.HandleFunc("/last", makeHTTPHandler(s.GetLastCalled, []string{http.MethodGet}, s.logger))
-	router.HandleFunc("/peek", makeHTTPHandler(s.GetNext, []string{http.MethodGet}, s.logger))
 	router.HandleFunc("/queue", makeHTTPHandler(s.GetQueue, []string{http.MethodGet}, s.logger))
 }
 
@@ -75,22 +76,27 @@ func (s *APIServer) GetLastCalled(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *APIServer) GetNext(w http.ResponseWriter, r *http.Request) error {
-	var requestBody struct {
-		CategoryID int `json:"category_id"`
+	categoryIDStr := r.URL.Query().Get("category_id")
+	if categoryIDStr == "" {
+		errBody := "no category_id given as query parameters"
+		s.logger.Error(errBody)
+		return writeJSON(w, http.StatusBadRequest, errors.New(errBody), s.logger)
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		s.logger.Error("bad request body", zap.Error(err))
-		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
+	categoryID, err := strconv.Atoi(categoryIDStr)
+	if err != nil {
+		errBody := "bad category ID"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusBadRequest, errors.New(errBody), s.logger)
 	}
 
-	if _, err := s.storage.GetCategory(requestBody.CategoryID); err != nil {
+	if _, err := s.storage.GetCategory(categoryID); err != nil {
 		errBody := badValidationString("category")
 		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errors.New(errBody), s.logger)
 	}
 
-	nextTicket, err := s.storage.SeeNext(requestBody.CategoryID)
+	nextTicket, err := s.storage.SeeNext(categoryID)
 	if err != nil {
 		s.logger.Error("error retreiving next ticket", zap.Error(err))
 		return writeJSON(w, http.StatusInternalServerError, err, s.logger)
@@ -101,4 +107,15 @@ func (s *APIServer) GetNext(w http.ResponseWriter, r *http.Request) error {
 
 func (s *APIServer) GetQueue(w http.ResponseWriter, r *http.Request) error {
 	return writeJSON(w, http.StatusNotImplemented, nil, s.logger)
+}
+
+func (s *APIServer) HandleNext(w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case http.MethodGet:
+		return s.GetNext(w, r)
+	case http.MethodPut:
+		return s.PutNextTicket(w, r)
+	default:
+		return fmt.Errorf("unhandled method %s", r.Method)
+	}
 }
