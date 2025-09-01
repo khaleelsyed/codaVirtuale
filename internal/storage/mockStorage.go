@@ -141,7 +141,7 @@ func (s MockStorage) GetDesk(id int) (Desk, error) {
 	return Desk{
 		ID:         id,
 		CategoryID: 1,
-		Label:      fmt.Sprintf("desk %i", id),
+		Label:      fmt.Sprintf("desk %d", id),
 	}, nil
 }
 
