@@ -34,11 +34,13 @@ func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.Logger)
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(allowedMethods, r.Method) {
 			writeJSON(w, http.StatusMethodNotAllowed, "method not allowed", logger)
+			return
 		}
 
 		if err := f(w, r); err != nil {
 			logger.Error("Unhandled error", zap.Error(err))
 			writeJSON(w, http.StatusInternalServerError, err, logger)
+			return
 		}
 	}
 }

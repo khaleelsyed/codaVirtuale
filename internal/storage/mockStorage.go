@@ -23,8 +23,83 @@ func (s MockStorage) CallNextTicket(desk Desk) (Ticket, error) {
 	}, nil
 }
 
-func (s MockStorage) LastCalled(category Category, positions int) ([]Ticket, error) {
-	return []Ticket{}, errNotImplemented
+func (s MockStorage) LastCalled(categoryID int, positions int) ([]Ticket, error) {
+	tickets := []Ticket{
+		{
+			ID:          1,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl1",
+			QueueNumber: 1,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          2,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl2",
+			QueueNumber: 2,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          3,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl1",
+			QueueNumber: 3,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          4,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl4",
+			QueueNumber: 4,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          5,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl5",
+			QueueNumber: 5,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          6,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl6",
+			QueueNumber: 6,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          7,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl7",
+			QueueNumber: 1,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          8,
+			CategoryID:  categoryID,
+			SubURL:      "hjkl8",
+			QueueNumber: 8,
+			DeskID:      1,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+	}
+
+	return tickets[:positions], nil
 }
 
 func (s MockStorage) SeeNext(category Category) (Ticket, error) {
@@ -44,7 +119,10 @@ func (s MockStorage) CreateCategory(name string) (Category, error) {
 }
 
 func (s MockStorage) GetCategory(id int) (Category, error) {
-	return Category{}, errNotImplemented
+	return Category{
+		ID:   id,
+		Name: fmt.Sprintf("Desk %d", id),
+	}, nil
 }
 
 func (s MockStorage) UpdateCategory(id int, name string) (Category, error) {
