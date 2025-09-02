@@ -8,7 +8,7 @@ type Storage interface {
 	SeeNext(categoryID int) (storage.Ticket, error)
 	SeeQueue() ([]int, error)
 
-	CreateTicket(category storage.Category) (storage.Ticket, error)
+	CreateTicket(categoryID int) (storage.Ticket, error)
 
 	CreateCategory(name string) (storage.Category, error)
 	GetCategory(id int) (storage.Category, error)

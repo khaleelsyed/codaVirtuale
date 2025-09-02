@@ -119,8 +119,16 @@ func (s MockStorage) SeeQueue() ([]int, error) {
 	return []int{1, 2, 3, 4, 5, 6, 7, 8, 9}, nil
 }
 
-func (s MockStorage) CreateTicket(category Category) (Ticket, error) {
-	return Ticket{}, errNotImplemented
+func (s MockStorage) CreateTicket(categoryID int) (Ticket, error) {
+	return Ticket{
+		ID:          8,
+		CategoryID:  categoryID,
+		SubURL:      "hjkl8",
+		QueueNumber: 8,
+		DeskID:      1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
 }
 
 func (s MockStorage) CreateCategory(name string) (Category, error) {

@@ -24,6 +24,11 @@ func (s *APIServer) Run() {
 	staffRouter := router.PathPrefix("/internal").Subrouter()
 	s.addStaffRoutes(staffRouter)
 
+	ticketRouter := router.PathPrefix("/ticket").Subrouter()
+	s.addTicketRoutes(ticketRouter)
+
+	router.HandleFunc("/ticket", makeHTTPHandler(s.handleTicket, []string{http.MethodPost, http.MethodDelete}, s.logger))
+
 	s.logger.Info("Listening to requests", zap.String("listenAddress", s.listenAddress))
 	if err := http.ListenAndServe(s.listenAddress, router); err != nil {
 		s.logger.Error("Failed to run ListenAndServe", zap.Error(err))
