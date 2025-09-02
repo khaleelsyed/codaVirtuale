@@ -6,7 +6,7 @@ type Storage interface {
 	CallNextTicket(deskID int) (storage.Ticket, error)
 	LastCalled(categoryID int, positions int) ([]storage.Ticket, error)
 	SeeNext(categoryID int) (storage.Ticket, error)
-	SeeQueue(categoryID int) ([]storage.Ticket, error)
+	SeeQueue() ([]int, error)
 
 	CreateTicket(category storage.Category) (storage.Ticket, error)
 

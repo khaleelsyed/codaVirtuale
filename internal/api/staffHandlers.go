@@ -106,7 +106,12 @@ func (s *APIServer) GetNext(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *APIServer) GetQueue(w http.ResponseWriter, r *http.Request) error {
-	return writeJSON(w, http.StatusNotImplemented, nil, s.logger)
+	ticketIDs, err := s.storage.SeeQueue()
+	if err != nil {
+		s.logger.Error("error retrieving queue", zap.Error(err))
+		return writeJSON(w, http.StatusInternalServerError, err, s.logger)
+	}
+	return writeJSON(w, http.StatusOK, ticketIDs, s.logger)
 }
 
 func (s *APIServer) HandleNext(w http.ResponseWriter, r *http.Request) error {
