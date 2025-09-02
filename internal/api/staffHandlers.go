@@ -121,6 +121,7 @@ func (s *APIServer) handleNext(w http.ResponseWriter, r *http.Request) error {
 	case http.MethodPut:
 		return s.putNextTicket(w, r)
 	default:
+		s.logger.Error("unhandled method", zap.String("method", r.Method))
 		return writeJSON(w, http.StatusBadRequest, fmt.Errorf("unhandled method %s", r.Method), s.logger)
 	}
 }
