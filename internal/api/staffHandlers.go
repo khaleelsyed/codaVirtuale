@@ -12,12 +12,12 @@ import (
 )
 
 func (s *APIServer) addStaffRoutes(router *mux.Router) {
-	router.HandleFunc("/next", makeHTTPHandler(s.HandleNext, []string{http.MethodPut, http.MethodGet}, s.logger))
-	router.HandleFunc("/last", makeHTTPHandler(s.GetLastCalled, []string{http.MethodGet}, s.logger))
-	router.HandleFunc("/queue", makeHTTPHandler(s.GetQueue, []string{http.MethodGet}, s.logger))
+	router.HandleFunc("/next", makeHTTPHandler(s.handleNext, []string{http.MethodPut, http.MethodGet}, s.logger))
+	router.HandleFunc("/last", makeHTTPHandler(s.getLastCalled, []string{http.MethodGet}, s.logger))
+	router.HandleFunc("/queue", makeHTTPHandler(s.getQueue, []string{http.MethodGet}, s.logger))
 }
 
-func (s *APIServer) PutNextTicket(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) putNextTicket(w http.ResponseWriter, r *http.Request) error {
 	var requestBody struct {
 		DeskID int `json:"desk_id"`
 	}
@@ -42,7 +42,7 @@ func (s *APIServer) PutNextTicket(w http.ResponseWriter, r *http.Request) error 
 	return writeJSON(w, http.StatusOK, nextTicket, s.logger)
 }
 
-func (s *APIServer) GetLastCalled(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) getLastCalled(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	var requestBody struct {
@@ -75,7 +75,7 @@ func (s *APIServer) GetLastCalled(w http.ResponseWriter, r *http.Request) error 
 	return writeJSON(w, http.StatusOK, ticketIDs, s.logger)
 }
 
-func (s *APIServer) GetNext(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) getNext(w http.ResponseWriter, r *http.Request) error {
 	categoryIDStr := r.URL.Query().Get("category_id")
 	if categoryIDStr == "" {
 		errBody := "no category_id given as query parameters"
@@ -105,7 +105,7 @@ func (s *APIServer) GetNext(w http.ResponseWriter, r *http.Request) error {
 	return writeJSON(w, http.StatusOK, nextTicket, s.logger)
 }
 
-func (s *APIServer) GetQueue(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) getQueue(w http.ResponseWriter, r *http.Request) error {
 	ticketIDs, err := s.storage.SeeQueue()
 	if err != nil {
 		s.logger.Error("error retrieving queue", zap.Error(err))
@@ -114,13 +114,13 @@ func (s *APIServer) GetQueue(w http.ResponseWriter, r *http.Request) error {
 	return writeJSON(w, http.StatusOK, ticketIDs, s.logger)
 }
 
-func (s *APIServer) HandleNext(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) handleNext(w http.ResponseWriter, r *http.Request) error {
 	switch r.Method {
 	case http.MethodGet:
-		return s.GetNext(w, r)
+		return s.getNext(w, r)
 	case http.MethodPut:
-		return s.PutNextTicket(w, r)
+		return s.putNextTicket(w, r)
 	default:
-		return fmt.Errorf("unhandled method %s", r.Method)
+		return writeJSON(w, http.StatusBadRequest, fmt.Errorf("unhandled method %s", r.Method), s.logger)
 	}
 }
