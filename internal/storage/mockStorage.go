@@ -131,6 +131,22 @@ func (s MockStorage) CreateTicket(categoryID int) (Ticket, error) {
 	}, nil
 }
 
+func (s MockStorage) GetTicket(ticketID int) (Ticket, error) {
+	return Ticket{
+		ID:          ticketID,
+		CategoryID:  4,
+		SubURL:      "hjkl8",
+		QueueNumber: ticketID,
+		DeskID:      1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
+}
+
+func (s MockStorage) DeleteTicket(ticketID int) error {
+	return nil
+}
+
 func (s MockStorage) CreateCategory(name string) (Category, error) {
 	return Category{}, errNotImplemented
 }

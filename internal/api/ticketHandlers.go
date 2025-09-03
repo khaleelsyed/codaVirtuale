@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -15,9 +16,44 @@ func (s *APIServer) addTicketRoutes(router *mux.Router) {
 	router.HandleFunc("", makeHTTPHandler(s.createTicket, []string{http.MethodPost}, s.logger))
 }
 
-func (s *APIServer) getTicket(w http.ResponseWriter, r *http.Request) error {}
+func (s *APIServer) getTicket(w http.ResponseWriter, r *http.Request) error {
+	idStr := mux.Vars(r)["id"]
+	ticketID, err := strconv.Atoi(idStr)
+	if err != nil {
+		errBody := "bad ID"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+	}
 
-func (s *APIServer) deleteTicket(w http.ResponseWriter, r *http.Request) error {}
+	ticket, err := s.storage.GetTicket(ticketID)
+	if err != nil {
+		errBody := "error retrieving ticket"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusInternalServerError, errBody, s.logger)
+	}
+
+	return writeJSON(w, http.StatusOK, ticket, s.logger)
+}
+
+func (s *APIServer) deleteTicket(w http.ResponseWriter, r *http.Request) error {
+	var err error
+
+	idStr := mux.Vars(r)["id"]
+	ticketID, err := strconv.Atoi(idStr)
+	if err != nil {
+		errBody := "bad ID"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+	}
+
+	if err = s.storage.DeleteTicket(ticketID); err != nil {
+		errBody := "error deleting ticket"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusInternalServerError, errBody, s.logger)
+	}
+
+	return writeJSON(w, http.StatusNoContent, nil, s.logger)
+}
 
 func (s *APIServer) createTicket(w http.ResponseWriter, r *http.Request) error {
 	var err error
