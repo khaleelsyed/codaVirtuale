@@ -27,8 +27,6 @@ func (s *APIServer) Run() {
 	ticketRouter := router.PathPrefix("/ticket").Subrouter()
 	s.addTicketRoutes(ticketRouter)
 
-	router.HandleFunc("/ticket", makeHTTPHandler(s.handleTicket, []string{http.MethodPost, http.MethodDelete}, s.logger))
-
 	s.logger.Info("Listening to requests", zap.String("listenAddress", s.listenAddress))
 	if err := http.ListenAndServe(s.listenAddress, router); err != nil {
 		s.logger.Error("Failed to run ListenAndServe", zap.Error(err))
@@ -62,7 +60,10 @@ func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.Logger) err
 
 	w.WriteHeader(status)
 
-	return json.NewEncoder(w).Encode(v)
+	if v != nil {
+		return json.NewEncoder(w).Encode(v)
+	}
+	return nil
 }
 
 func NewAPIServer(listenAddress string, storage Storage, logger *zap.Logger) *APIServer {
