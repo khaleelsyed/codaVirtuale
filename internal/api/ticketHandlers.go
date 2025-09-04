@@ -27,7 +27,7 @@ func (s *APIServer) getTicket(w http.ResponseWriter, r *http.Request) error {
 
 	ticket, err := s.storage.GetTicket(ticketID)
 	if err != nil {
-		errBody := "error retrieving ticket"
+		errBody := badValidationString("category")
 		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusInternalServerError, errBody, s.logger)
 	}

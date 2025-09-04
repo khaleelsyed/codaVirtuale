@@ -148,7 +148,7 @@ func (s MockStorage) DeleteTicket(ticketID int) error {
 }
 
 func (s MockStorage) CreateCategory(name string) (Category, error) {
-	return Category{}, errNotImplemented
+	return Category{ID: 1, Name: name}, nil
 }
 
 func (s MockStorage) GetCategory(id int) (Category, error) {
@@ -159,11 +159,11 @@ func (s MockStorage) GetCategory(id int) (Category, error) {
 }
 
 func (s MockStorage) UpdateCategory(id int, name string) (Category, error) {
-	return Category{}, errNotImplemented
+	return Category{ID: id, Name: name}, nil
 }
 
 func (s MockStorage) DeleteCategory(id int) error {
-	return errNotImplemented
+	return nil
 }
 
 func (s MockStorage) CreateDesk(label string, category Category) (Desk, error) {
