@@ -131,7 +131,7 @@ func (s *APIServer) createDesk(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if errs := validate(requestBody); len(errs) > 0 {
-		s.logger.Error("bad request body", "errors", errs)
+		s.logger.Errorw("bad request body", "errors", errs)
 		return writeJSON(w, http.StatusBadRequest, map[string]any{
 			"errors": errs,
 		}, s.logger)
@@ -140,7 +140,7 @@ func (s *APIServer) createDesk(w http.ResponseWriter, r *http.Request) error {
 	desk, err := s.storage.CreateDesk(requestBody.Label, requestBody.CategoryID)
 	if err != nil {
 		errBody := "error creating desk"
-		s.logger.Error(errBody, zap.Error(err))
+		s.logger.Errorw(errBody, err)
 		return writeJSON(w, http.StatusInternalServerError, errors.New(errBody), s.logger)
 	}
 
