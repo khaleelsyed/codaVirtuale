@@ -17,8 +17,8 @@ type Storage interface {
 	UpdateCategory(id int, name string) (storage.Category, error)
 	DeleteCategory(id int) error
 
-	CreateDesk(label string, category storage.Category) (storage.Desk, error)
+	CreateDesk(label string, categoryID int) (storage.Desk, error)
 	GetDesk(id int) (storage.Desk, error)
-	UpdateDesk(id int, label string) (storage.Desk, error)
+	UpdateDesk(desk storage.Desk) (storage.Desk, error)
 	DeleteDesk(id int) error
 }

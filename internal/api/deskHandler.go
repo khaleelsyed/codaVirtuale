@@ -39,13 +39,21 @@ func (s *APIServer) putDesk(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	var requestBody struct {
-		Name string
+		CategoryID int    `json:"category_id"`
+		Label      string `json:"label"`
 	}
 
 	idStr := mux.Vars(r)["id"]
-	categoryID, err := strconv.Atoi(idStr)
+	deskID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
+		s.logger.Error(errBody, zap.Error(err))
+		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+	}
+
+	_, err = s.storage.GetDesk(deskID)
+	if err != nil {
+		errBody := badValidationString("category")
 		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
@@ -55,14 +63,19 @@ func (s *APIServer) putDesk(w http.ResponseWriter, r *http.Request) error {
 		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
 	}
 
-	category, err := s.storage.UpdateCategory(categoryID, requestBody.Name)
-	if err != nil {
-		errBody := badValidationString("category")
-		s.logger.Error(errBody, zap.Error(err))
-		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
-	}
+	s.logger.Debug("", zap.Any("request body", requestBody))
 
-	return writeJSON(w, http.StatusOK, category, s.logger)
+	// DEV
+	// category, err := s.storage.UpdateCategory(categoryID, requestBody.Name)
+	// if err != nil {
+	// 	errBody := badValidationString("category")
+	// 	s.logger.Error(errBody, zap.Error(err))
+	// 	return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+	// }
+
+	// return writeJSON(w, http.StatusOK, category, s.logger)
+
+	return nil
 }
 
 func (s *APIServer) deleteDesk(w http.ResponseWriter, r *http.Request) error {

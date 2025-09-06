@@ -30,6 +30,9 @@ func (s *APIServer) Run() {
 	categoryRouter := router.PathPrefix("/category").Subrouter()
 	s.addCategoryRoutes(categoryRouter)
 
+	deskRouter := router.PathPrefix("/desk").Subrouter()
+	s.addDeskRoutes(deskRouter)
+
 	s.logger.Info("Listening to requests", zap.String("listenAddress", s.listenAddress))
 	if err := http.ListenAndServe(s.listenAddress, router); err != nil {
 		s.logger.Error("Failed to run ListenAndServe", zap.Error(err))

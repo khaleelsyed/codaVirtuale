@@ -1,12 +1,9 @@
 package storage
 
 import (
-	"errors"
 	"fmt"
 	"time"
 )
-
-var errNotImplemented = errors.New("feature not implemented yet")
 
 type MockStorage struct{}
 
@@ -166,8 +163,12 @@ func (s MockStorage) DeleteCategory(id int) error {
 	return nil
 }
 
-func (s MockStorage) CreateDesk(label string, category Category) (Desk, error) {
-	return Desk{}, errNotImplemented
+func (s MockStorage) CreateDesk(label string, categoryID int) (Desk, error) {
+	return Desk{
+		ID:         1,
+		CategoryID: categoryID,
+		Label:      "desk 1",
+	}, nil
 }
 
 func (s MockStorage) GetDesk(id int) (Desk, error) {
@@ -178,12 +179,16 @@ func (s MockStorage) GetDesk(id int) (Desk, error) {
 	}, nil
 }
 
-func (s MockStorage) UpdateDesk(id int, label string) (Desk, error) {
-	return Desk{}, errNotImplemented
+func (s MockStorage) UpdateDesk(desk Desk) (Desk, error) {
+	return Desk{
+		ID:         desk.ID,
+		CategoryID: desk.CategoryID,
+		Label:      desk.Label,
+	}, nil
 }
 
 func (s MockStorage) DeleteDesk(id int) error {
-	return errNotImplemented
+	return nil
 }
 
 func NewMockStorage() (MockStorage, error) {
