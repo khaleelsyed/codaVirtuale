@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/khaleelsyed/codaVirtuale/internal/api"
@@ -12,15 +11,16 @@ import (
 func main() {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync()
+	sugar := logger.Sugar()
 
 	storage, err := storage.NewMockStorage()
 	if err != nil {
-		log.Panic(err)
+		sugar.Panic(err)
 	}
 
 	listenAddress := os.Getenv("LISTEN_ADDRESS")
 
-	server := api.NewAPIServer(listenAddress, storage, logger)
+	server := api.NewAPIServer(listenAddress, storage, sugar)
 
 	server.Run()
 }

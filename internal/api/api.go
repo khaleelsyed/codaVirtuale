@@ -14,7 +14,7 @@ type handlerFunc func(w http.ResponseWriter, r *http.Request) error
 type APIServer struct {
 	listenAddress      string
 	storage            Storage
-	logger             *zap.Logger
+	logger             *zap.SugaredLogger
 	rollingQueueNumber int
 }
 
@@ -39,7 +39,7 @@ func (s *APIServer) Run() {
 	}
 }
 
-func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.Logger) http.HandlerFunc {
+func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(allowedMethods, r.Method) {
 			writeJSON(w, http.StatusMethodNotAllowed, "method not allowed", logger)
@@ -54,7 +54,7 @@ func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.Logger)
 	}
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.Logger) error {
+func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.SugaredLogger) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err, errFound := v.(error); errFound {
@@ -62,6 +62,8 @@ func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.Logger) err
 			logger.Error("unhandled error passed with normal status code", zap.Int("original status code", status), zap.Error(err))
 			status = http.StatusInternalServerError
 		}
+
+		v = err.Error()
 	}
 
 	w.WriteHeader(status)
@@ -72,7 +74,7 @@ func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.Logger) err
 	return nil
 }
 
-func NewAPIServer(listenAddress string, storage Storage, logger *zap.Logger) *APIServer {
+func NewAPIServer(listenAddress string, storage Storage, logger *zap.SugaredLogger) *APIServer {
 	return &APIServer{
 		listenAddress:      listenAddress,
 		storage:            storage,

@@ -167,7 +167,7 @@ func (s MockStorage) CreateDesk(label string, categoryID int) (Desk, error) {
 	return Desk{
 		ID:         1,
 		CategoryID: categoryID,
-		Label:      "desk 1",
+		Label:      label,
 	}, nil
 }
 
@@ -179,11 +179,21 @@ func (s MockStorage) GetDesk(id int) (Desk, error) {
 	}, nil
 }
 
-func (s MockStorage) UpdateDesk(desk Desk) (Desk, error) {
+func (s MockStorage) UpdateDesk(id int, deskUpdate struct {
+	CategoryID int
+	Label      string
+}) (Desk, error) {
+	if deskUpdate.CategoryID == 0 {
+		deskUpdate.CategoryID = 1
+	}
+
+	if deskUpdate.Label == "" {
+		deskUpdate.Label = fmt.Sprintf("desk %d", id)
+	}
 	return Desk{
-		ID:         desk.ID,
-		CategoryID: desk.CategoryID,
-		Label:      desk.Label,
+		ID:         id,
+		CategoryID: deskUpdate.CategoryID,
+		Label:      deskUpdate.Label,
 	}, nil
 }
 

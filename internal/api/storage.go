@@ -19,6 +19,9 @@ type Storage interface {
 
 	CreateDesk(label string, categoryID int) (storage.Desk, error)
 	GetDesk(id int) (storage.Desk, error)
-	UpdateDesk(desk storage.Desk) (storage.Desk, error)
+	UpdateDesk(id int, deskUpdate struct {
+		CategoryID int
+		Label      string
+	}) (storage.Desk, error)
 	DeleteDesk(id int) error
 }
