@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 )
 
 func (s *APIServer) addCategoryRoutes(router *mux.Router) {
@@ -21,14 +20,12 @@ func (s *APIServer) getCategory(w http.ResponseWriter, r *http.Request) error {
 	categoryID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
 	category, err := s.storage.GetCategory(categoryID)
 	if err != nil {
 		errBody := badValidationString("category")
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
@@ -46,19 +43,17 @@ func (s *APIServer) putCategory(w http.ResponseWriter, r *http.Request) error {
 	categoryID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
-		s.logger.Error(errBody, zap.Error(err))
+		s.logger(errBody, "error", err)
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
 	if err = json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		s.logger.Error("bad request body", zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
 	}
 
 	category, err := s.storage.UpdateCategory(categoryID, requestBody.Name)
 	if err != nil {
 		errBody := badValidationString("category")
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
@@ -70,13 +65,11 @@ func (s *APIServer) deleteCategory(w http.ResponseWriter, r *http.Request) error
 	categoryID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
 	if err := s.storage.DeleteCategory(categoryID); err != nil {
 		errBody := badValidationString("category")
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
@@ -91,14 +84,12 @@ func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) error
 	}
 
 	if err = json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		s.logger.Error("bad request body", zap.Error(err))
 		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
 	}
 
 	category, err := s.storage.CreateCategory(requestBody.Name)
 	if err != nil {
 		errBody := "error creating category"
-		s.logger.Error(errBody, zap.Error(err))
 		return writeJSON(w, http.StatusInternalServerError, errors.New(errBody), s.logger)
 	}
 
@@ -106,7 +97,6 @@ func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) error
 }
 
 func (s *APIServer) handleCategory(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Debug("", zap.String("method", r.Method))
 	switch r.Method {
 	case http.MethodGet:
 		return s.getCategory(w, r)
@@ -115,7 +105,7 @@ func (s *APIServer) handleCategory(w http.ResponseWriter, r *http.Request) error
 	case http.MethodDelete:
 		return s.deleteCategory(w, r)
 	default:
-		s.logger.Error("unhandled method", zap.String("method", r.Method))
+		s.logger.Errorw("unhandled method", "method", r.Method)
 		return writeJSON(w, http.StatusInternalServerError, fmt.Errorf("unhandled method %s", r.Method), s.logger)
 	}
 }

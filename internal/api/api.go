@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"slices"
 
@@ -33,9 +32,9 @@ func (s *APIServer) Run() {
 	deskRouter := router.PathPrefix("/desk").Subrouter()
 	s.addDeskRoutes(deskRouter)
 
-	s.logger.Info("Listening to requests", zap.String("listenAddress", s.listenAddress))
+	s.logger.Infow("Listening to requests", "listenAddress", s.listenAddress)
 	if err := http.ListenAndServe(s.listenAddress, router); err != nil {
-		s.logger.Error("Failed to run ListenAndServe", zap.Error(err))
+		s.logger.Errorw("Failed to run ListenAndServe", "error", err)
 	}
 }
 
@@ -47,31 +46,11 @@ func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.Sugared
 		}
 
 		if err := f(w, r); err != nil {
-			logger.Error("Unhandled error", zap.Error(err))
+			logger.Errorw("Unhandled error", "error", err)
 			writeJSON(w, http.StatusInternalServerError, err, logger)
 			return
 		}
 	}
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.SugaredLogger) error {
-	w.Header().Set("Content-Type", "application/json")
-
-	if err, errFound := v.(error); errFound {
-		if status < 400 {
-			logger.Error("unhandled error passed with normal status code", zap.Int("original status code", status), zap.Error(err))
-			status = http.StatusInternalServerError
-		}
-
-		v = err.Error()
-	}
-
-	w.WriteHeader(status)
-
-	if v != nil {
-		return json.NewEncoder(w).Encode(v)
-	}
-	return nil
 }
 
 func NewAPIServer(listenAddress string, storage Storage, logger *zap.SugaredLogger) *APIServer {
