@@ -43,7 +43,6 @@ func (s *APIServer) putCategory(w http.ResponseWriter, r *http.Request) error {
 	categoryID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
-		s.logger(errBody, "error", err)
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
