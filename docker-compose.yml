@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:17.6
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "$LOCAL_POSTGRES_PORT:5432"
+
+volumes:
+  pgdata:

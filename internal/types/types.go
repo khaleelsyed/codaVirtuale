@@ -1,4 +1,4 @@
-package storage
+package types
 
 import "time"
 
@@ -14,6 +14,7 @@ type Ticket struct {
 	SubURL      string    `json:"sub_url"`
 	QueueNumber int       `json:"queue_number"` // Can be reset anytime (daily, every 12 hours ...)
 	DeskID      int       `json:"desk_id"`
+	Closed      bool      `json:"closed"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

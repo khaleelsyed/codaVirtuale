@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/khaleelsyed/codaVirtuale/internal/types"
 )
 
 func (s *APIServer) addCategoryRoutes(router *mux.Router) {
@@ -25,8 +26,10 @@ func (s *APIServer) getCategory(w http.ResponseWriter, r *http.Request) error {
 
 	category, err := s.storage.GetCategory(categoryID)
 	if err != nil {
-		errBody := badValidationString("category")
-		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+		if err == types.ErrnotFound {
+			return writeJSON(w, http.StatusNotFound, err, s.logger)
+		}
+		return writeJSON(w, http.StatusBadRequest, badValidationString("category"), s.logger)
 	}
 
 	return writeJSON(w, http.StatusOK, category, s.logger)
@@ -79,7 +82,7 @@ func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) error
 	var err error
 
 	var requestBody struct {
-		Name string
+		Name string `json:"name"`
 	}
 
 	if err = json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
