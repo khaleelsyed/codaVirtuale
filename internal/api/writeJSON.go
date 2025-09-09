@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.uber.org/zap"
+	"github.com/khaleelsyed/codaVirtuale/internal/types"
 )
 
-func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.SugaredLogger) error {
+func writeJSON(w http.ResponseWriter, status int, v any, logger *types.SugarWithTrace) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	if isErrorValue(v) {
@@ -22,7 +22,7 @@ func writeJSON(w http.ResponseWriter, status int, v any, logger *zap.SugaredLogg
 	return nil
 }
 
-func handleErrors(v any, status int, logger *zap.SugaredLogger) (any, int) {
+func handleErrors(v any, status int, logger *types.SugarWithTrace) (any, int) {
 	if err, found := v.(error); found {
 		validateErrStatus(status, err, logger)
 
@@ -59,7 +59,7 @@ func isErrorValue(v any) bool {
 	return false
 }
 
-func validateErrStatus(status int, v any, logger *zap.SugaredLogger) int {
+func validateErrStatus(status int, v any, logger *types.SugarWithTrace) int {
 	if status < 400 {
 		logger.Warnw("unhandled error passed with non-error status code", "original status code", status, "error value", v)
 		return http.StatusInternalServerError

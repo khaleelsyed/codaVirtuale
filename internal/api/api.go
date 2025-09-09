@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
+	"github.com/khaleelsyed/codaVirtuale/internal/types"
 )
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request) error
@@ -13,7 +13,7 @@ type handlerFunc func(w http.ResponseWriter, r *http.Request) error
 type APIServer struct {
 	listenAddress      string
 	storage            Storage
-	logger             *zap.SugaredLogger
+	logger             *types.SugarWithTrace
 	rollingQueueNumber int
 }
 
@@ -38,7 +38,7 @@ func (s *APIServer) Run() {
 	}
 }
 
-func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.SugaredLogger) http.HandlerFunc {
+func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *types.SugarWithTrace) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(allowedMethods, r.Method) {
 			writeJSON(w, http.StatusMethodNotAllowed, "method not allowed", logger)
@@ -53,7 +53,7 @@ func makeHTTPHandler(f handlerFunc, allowedMethods []string, logger *zap.Sugared
 	}
 }
 
-func NewAPIServer(listenAddress string, storage Storage, logger *zap.SugaredLogger) *APIServer {
+func NewAPIServer(listenAddress string, storage Storage, logger *types.SugarWithTrace) *APIServer {
 	return &APIServer{
 		listenAddress:      listenAddress,
 		storage:            storage,

@@ -1,32 +1,22 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/khaleelsyed/codaVirtuale/internal/api"
 	"github.com/khaleelsyed/codaVirtuale/internal/storage"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"github.com/khaleelsyed/codaVirtuale/internal/types"
 )
 
-const TraceLevel zapcore.Level = -2 // TRACE is lower than DEBUG (-1)
-
-type SugarWithTrace struct {
-	*zap.SugaredLogger
-}
-
-func (l *SugarWithTrace) Trace(msg string, keysAndValues ...interface{}) {
-	if ce := l.Desugar().Check(TraceLevel, msg); ce != nil {
-		ce.Write(zap.Any("extra", keysAndValues))
-	}
-}
-
 func main() {
-	logger, _ := zap.NewDevelopment()
+	logger, err := types.NewLogger()
+	if err != nil {
+		log.Fatal("failed to initialise zap.logger")
+	}
 	defer logger.Sync()
-	sugar := logger.Sugar()
 
-	storage, err := storage.NewPostgresStorage(sugar)
+	storage, err := storage.NewPostgresStorage(logger)
 	if err != nil {
 		return
 	}
@@ -34,10 +24,10 @@ func main() {
 	if err = storage.Init(); err != nil {
 		return
 	}
+	logger.Info("database connection is stable")
 
 	listenAddress := os.Getenv("LISTEN_ADDRESS")
 
-	server := api.NewAPIServer(listenAddress, storage, sugar)
-
+	server := api.NewAPIServer(listenAddress, storage, logger)
 	server.Run()
 }

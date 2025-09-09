@@ -6,12 +6,11 @@ import (
 
 	"github.com/khaleelsyed/codaVirtuale/internal/types"
 	_ "github.com/lib/pq"
-	"go.uber.org/zap"
 )
 
 type PostgresStorage struct {
 	db     *sql.DB
-	logger *zap.SugaredLogger
+	logger *types.SugarWithTrace
 }
 
 func (s *PostgresStorage) CallNextTicket(deskID int) (types.Ticket, error) {
@@ -200,7 +199,7 @@ func (s *PostgresStorage) Init() error {
 	return nil
 }
 
-func NewPostgresStorage(logger *zap.SugaredLogger) (*PostgresStorage, error) {
+func NewPostgresStorage(logger *types.SugarWithTrace) (*PostgresStorage, error) {
 
 	connStr := os.Getenv("POSTGRES_CONN_STRING")
 
