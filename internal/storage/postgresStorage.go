@@ -84,7 +84,15 @@ func (s *PostgresStorage) GetCategory(id int) (types.Category, error) {
 }
 
 func (s *PostgresStorage) UpdateCategory(id int, name string) (types.Category, error) {
-	return types.Category{}, types.ErrNotImplemented
+	query := `UPDATE category
+	SET name = $1
+	WHERE id = $2;`
+
+	if _, err := s.db.Query(query, name, id); err != nil {
+		s.logger.Tracew("error updating category", "error", err)
+		return types.Category{}, err
+	}
+	return types.Category{ID: id, Name: name}, nil
 }
 
 func (s *PostgresStorage) DeleteCategory(id int) error {
