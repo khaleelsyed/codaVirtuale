@@ -26,7 +26,8 @@ type SugarWithTrace struct {
 }
 
 func (l *SugarWithTrace) Tracew(msg string, keysAndValues ...interface{}) {
-	if ce := l.Desugar().Check(zapcore.Level(TraceLevel), msg); ce != nil {
+	desugared := l.Desugar().WithOptions(zap.AddCallerSkip(1))
+	if ce := desugared.Check(zapcore.Level(TraceLevel), msg); ce != nil {
 		ce.Write(l.sweetenFields(keysAndValues)...)
 	}
 }
@@ -86,5 +87,6 @@ func NewLogger() (*SugarWithTrace, error) {
 	)
 
 	logger := zap.New(core, zap.AddCaller())
+
 	return &SugarWithTrace{logger.Sugar()}, nil
 }
