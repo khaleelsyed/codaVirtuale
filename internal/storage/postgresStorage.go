@@ -136,9 +136,9 @@ func (s *PostgresStorage) CreateDesk(label string, categoryID int) (types.Desk, 
 }
 
 func (s *PostgresStorage) GetDesk(id int) (types.Desk, error) {
-	result, err := s.db.Query("SELECT (id, category_id, label) FROM desk WHERE id = $1", id)
+	result, err := s.db.Query("SELECT id, category_id, label FROM desk WHERE id = $1", id)
 	if err != nil {
-		s.logger.Warnw("error with GetDesk", "error", err)
+		s.logger.Warnw("error with GetDesk Query", "error", err)
 	}
 	defer result.Close()
 
@@ -146,6 +146,7 @@ func (s *PostgresStorage) GetDesk(id int) (types.Desk, error) {
 
 	if result.Next() {
 		if err = result.Scan(&desk.ID, &desk.CategoryID, &desk.Label); err != nil {
+			s.logger.Tracew("error with GetDesk Scanner", "id", id, "error", err)
 			return types.Desk{}, err
 		}
 		return desk, nil
@@ -161,8 +162,7 @@ func (s *PostgresStorage) UpdateDesk(id int, deskUpdate struct {
 	var err error
 
 	query := `UPDATE desk
-	SET category_id = $1
-	SET label = $2
+	SET category_id = $1, label = $2
 	WHERE id = $3;`
 
 	result, err := s.db.Exec(query, deskUpdate.CategoryID, deskUpdate.Label, id)
@@ -175,7 +175,7 @@ func (s *PostgresStorage) UpdateDesk(id int, deskUpdate struct {
 		return types.Desk{}, err
 	}
 
-	return types.Desk{}, types.ErrNotImplemented
+	return types.Desk{ID: id, Label: deskUpdate.Label, CategoryID: deskUpdate.CategoryID}, nil
 
 }
 

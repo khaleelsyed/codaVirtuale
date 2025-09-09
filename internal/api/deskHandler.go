@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/khaleelsyed/codaVirtuale/internal/types"
 )
 
 func (s *APIServer) addDeskRoutes(router *mux.Router) {
@@ -21,15 +22,15 @@ func (s *APIServer) getDesk(w http.ResponseWriter, r *http.Request) error {
 	deskID, err := strconv.Atoi(idStr)
 	if err != nil {
 		errBody := "bad ID"
-
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
 	desk, err := s.storage.GetDesk(deskID)
 	if err != nil {
-		errBody := badValidationString("desk")
-
-		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+		if err == types.ErrnotFound {
+			return writeJSON(w, http.StatusNotFound, err, s.logger)
+		}
+		return writeJSON(w, http.StatusBadRequest, badValidationString("desk"), s.logger)
 	}
 
 	return writeJSON(w, http.StatusOK, desk, s.logger)
@@ -38,10 +39,12 @@ func (s *APIServer) getDesk(w http.ResponseWriter, r *http.Request) error {
 func (s *APIServer) putDesk(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
-	var requestBody struct {
+	type DeskUpdate struct {
 		CategoryID int    `json:"category_id"`
 		Label      string `json:"label"`
 	}
+
+	var requestBody DeskUpdate
 
 	idStr := mux.Vars(r)["id"]
 	deskID, err := strconv.Atoi(idStr)
@@ -51,33 +54,52 @@ func (s *APIServer) putDesk(w http.ResponseWriter, r *http.Request) error {
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}
 
-	desk, err := s.storage.GetDesk(deskID)
-	if err != nil {
-		errBody := badValidationString("desk")
-
-		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
-	}
-
 	if err = json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
 	}
 
-	if requestBody.CategoryID != 0 {
-		if _, err = s.storage.GetCategory(requestBody.CategoryID); err != nil {
-			errBody := badValidationString("category")
-
-			return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+	validate := func(rB DeskUpdate) (DeskUpdate, error) {
+		if rB.Label == "" && rB.CategoryID == 0 {
+			s.logger.Debugw("deskUpdate check", "label", rB.Label, "CategoryID", rB.CategoryID, "id", deskID)
+			return DeskUpdate{}, apiError{"Request must contain either 'category_id' or a 'label'"}
 		}
+
+		currentRow, err := s.storage.GetDesk(deskID)
+		if err != nil {
+			return DeskUpdate{}, err
+		}
+
+		if rB.CategoryID == 0 {
+			rB.CategoryID = currentRow.CategoryID
+		} else if rB.Label == "" {
+			rB.Label = currentRow.Label
+
+			if _, err = s.storage.GetCategory(rB.CategoryID); err != nil {
+				if err == types.ErrnotFound {
+					return DeskUpdate{}, errors.New("category not found")
+				}
+				return DeskUpdate{}, err
+			}
+		}
+		return rB, nil
 	}
 
-	desk, err = s.storage.UpdateDesk(deskID, struct {
+	requestBody, err = validate(requestBody)
+	if err != nil {
+		if err == types.ErrnotFound || err.Error() == "category not found" {
+			return writeJSON(w, http.StatusNotFound, err, s.logger)
+		}
+
+		s.logger.Tracew("failed to validate desk", "id", deskID, "error", err)
+		return writeJSON(w, http.StatusBadRequest, err, s.logger)
+	}
+
+	desk, err := s.storage.UpdateDesk(deskID, struct {
 		CategoryID int
 		Label      string
 	}(requestBody))
 	if err != nil {
-		errBody := "failed to update desk"
-
-		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
+		return writeJSON(w, http.StatusBadRequest, errors.New("failed to update desk"), s.logger)
 	}
 
 	return writeJSON(w, http.StatusOK, desk, s.logger)
