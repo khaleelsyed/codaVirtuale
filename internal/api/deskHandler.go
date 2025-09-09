@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -131,6 +132,9 @@ func (s *APIServer) createDesk(w http.ResponseWriter, r *http.Request) error {
 
 	desk, err := s.storage.CreateDesk(requestBody.Label, requestBody.CategoryID)
 	if err != nil {
+		if strings.Contains(err.Error(), pqForeignKeyConstraintViolation) {
+			return writeJSON(w, http.StatusInternalServerError, errors.New("category_id does not exist"), s.logger)
+		}
 		errBody := "error creating desk"
 		return writeJSON(w, http.StatusInternalServerError, errors.New(errBody), s.logger)
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/khaleelsyed/codaVirtuale/internal/types"
@@ -55,6 +56,9 @@ func (s *APIServer) putCategory(w http.ResponseWriter, r *http.Request) error {
 
 	category, err := s.storage.UpdateCategory(categoryID, requestBody.Name)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), pqUniqueConstraintViolation) {
+			return writeJSON(w, http.StatusBadRequest, "'name' must be unique", s.logger)
+		}
 		errBody := badValidationString("category")
 		return writeJSON(w, http.StatusBadRequest, errBody, s.logger)
 	}

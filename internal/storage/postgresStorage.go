@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/khaleelsyed/codaVirtuale/internal/types"
@@ -84,38 +85,133 @@ func (s *PostgresStorage) GetCategory(id int) (types.Category, error) {
 }
 
 func (s *PostgresStorage) UpdateCategory(id int, name string) (types.Category, error) {
+	var err error
+
 	query := `UPDATE category
 	SET name = $1
 	WHERE id = $2;`
 
-	if _, err := s.db.Query(query, name, id); err != nil {
-		s.logger.Tracew("error updating category", "error", err)
+	result, err := s.db.Exec(query, name, id)
+	if err != nil {
+		s.logger.Tracew("error updating category", "id", id, "error", err)
+		return types.Category{}, err
+	}
+
+	if err = checkSingleRowAffected(result, id, "UpdateCategory", s.logger); err != nil {
 		return types.Category{}, err
 	}
 	return types.Category{ID: id, Name: name}, nil
 }
 
 func (s *PostgresStorage) DeleteCategory(id int) error {
-	return types.ErrNotImplemented
+	query := `DELETE FROM category
+	WHERE id = $1;`
+
+	result, err := s.db.Exec(query, id)
+	if err != nil {
+		s.logger.Tracew("error deleting category", "id", id, "error", err)
+		return err
+	}
+
+	return checkSingleRowAffected(result, id, "DeleteCategory", s.logger)
 }
 
 func (s *PostgresStorage) CreateDesk(label string, categoryID int) (types.Desk, error) {
-	return types.Desk{}, types.ErrNotImplemented
+	result, err := s.db.Query("INSERT INTO desk (label, category_id) VALUES ($1, $2) RETURNING id, label, category_id", label, categoryID)
+	if err != nil {
+		s.logger.Warnw("could not create desk", "error", err)
+		return types.Desk{}, err
+	}
+	defer result.Close()
+
+	var desk types.Desk
+
+	for result.Next() {
+		if err = result.Scan(&desk.ID, &desk.Label, &desk.CategoryID); err != nil {
+			return types.Desk{}, err
+		}
+	}
+
+	return desk, nil
 }
 
 func (s *PostgresStorage) GetDesk(id int) (types.Desk, error) {
-	return types.Desk{}, types.ErrNotImplemented
+	result, err := s.db.Query("SELECT (id, category_id, label) FROM desk WHERE id = $1", id)
+	if err != nil {
+		s.logger.Warnw("error with GetDesk", "error", err)
+	}
+	defer result.Close()
+
+	var desk types.Desk
+
+	if result.Next() {
+		if err = result.Scan(&desk.ID, &desk.CategoryID, &desk.Label); err != nil {
+			return types.Desk{}, err
+		}
+		return desk, nil
+	}
+
+	return types.Desk{}, types.ErrnotFound
 }
 
 func (s *PostgresStorage) UpdateDesk(id int, deskUpdate struct {
 	CategoryID int
 	Label      string
 }) (types.Desk, error) {
+	var err error
+
+	query := `UPDATE desk
+	SET category_id = $1
+	SET label = $2
+	WHERE id = $3;`
+
+	result, err := s.db.Exec(query, deskUpdate.CategoryID, deskUpdate.Label, id)
+	if err != nil {
+		s.logger.Tracew("error updating desk", "id", id, "category_id", deskUpdate.CategoryID, "error", err)
+		return types.Desk{}, err
+	}
+
+	if err = checkSingleRowAffected(result, id, "UpdateDesk", s.logger); err != nil {
+		return types.Desk{}, err
+	}
+
 	return types.Desk{}, types.ErrNotImplemented
+
 }
 
 func (s *PostgresStorage) DeleteDesk(id int) error {
-	return types.ErrNotImplemented
+	query := `DELETE FROM desk
+	WHERE id = $1;`
+
+	result, err := s.db.Exec(query, id)
+	if err != nil {
+		s.logger.Tracew("error deleting desk", "id", id, "error", err)
+		return err
+	}
+
+	return checkSingleRowAffected(result, id, "DeleteDesk", s.logger)
+}
+
+func checkSingleRowAffected(result sql.Result, id int, operation string, logger *types.SugarWithTrace) error {
+	var err error
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.Warnw(fmt.Sprintf("err while counting rows affected during %s", operation), "id", id, "error", err)
+		return err
+	}
+
+	switch rowsAffected {
+	case 1:
+		return nil
+	case 0:
+		logger.Warnw(fmt.Sprintf("failed to perform %s", operation), "id", id, "RowsAffected", rowsAffected, "error", nil)
+		return ErrFailedToDelete
+	default:
+		err = errAffectedMultipleRows(operation)
+		logger.Errorw(err.Error(), "id", id, "RowsAffected", rowsAffected)
+		return err
+	}
 }
 
 func (s *PostgresStorage) createCategoryTable() error {
