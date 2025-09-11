@@ -35,7 +35,7 @@ func (s *PostgresStorage) SeeQueue() ([]int, error) {
 }
 
 func (s *PostgresStorage) CreateTicket(ticketCreate types.TicketCreate) (types.Ticket, error) {
-	result, err := s.db.Query("INSERT INTO ticket (category_id, sub_url) VALUES ($1, $2) RETURNING id, category_id, sub_url, desk_id, closed, created_at", ticketCreate.CategoryID, ticketCreate.SubURL)
+	result, err := s.db.Query("INSERT INTO ticket (category_id, sub_url) VALUES ($1, $2) RETURNING id, category_id, sub_url, closed, created_at", ticketCreate.CategoryID, ticketCreate.SubURL)
 	if err != nil {
 		s.logger.Warnw("could not create ticket", "error", err)
 		return types.Ticket{}, err
@@ -45,19 +45,40 @@ func (s *PostgresStorage) CreateTicket(ticketCreate types.TicketCreate) (types.T
 	var ticket types.Ticket
 
 	for result.Next() {
-		if err = result.Scan(&ticket.ID, &ticket.CategoryID, &ticket.SubURL, &ticket.DeskID, &ticket.Closed, &ticket.CreatedAt); err != nil {
+		if err = result.Scan(&ticket.ID, &ticket.CategoryID, &ticket.SubURL, &ticket.Closed, &ticket.CreatedAt); err != nil {
 			return types.Ticket{}, err
 		}
+		ticket.DeskID = -1
 	}
 
 	return ticket, nil
 }
 
-func (s *PostgresStorage) GetTicket(ticketID int) (types.Ticket, error) {
-	return types.Ticket{}, types.ErrNotImplemented
+func (s *PostgresStorage) GetTicket(id int) (types.Ticket, error) {
+	result, err := s.db.Query("SELECT id, category_id, sub_url, desk_id, closed, created_at FROM ticket WHERE id = $1", id)
+	if err != nil {
+		s.logger.Warnw("error with GetCategory", "error", err)
+	}
+	defer result.Close()
+
+	var ticket types.Ticket
+
+	if result.Next() {
+		err = result.Scan(&ticket.ID, &ticket.CategoryID, &ticket.SubURL, &ticket.DeskID, &ticket.Closed, &ticket.CreatedAt)
+		if err != nil {
+			if err.Error() == errDeskNull.Error() {
+				ticket.DeskID = -1
+				return ticket, nil
+			}
+			return types.Ticket{}, err
+		}
+		return ticket, nil
+	}
+
+	return types.Ticket{}, types.ErrnotFound
 }
 
-func (s *PostgresStorage) DeleteTicket(ticketID int) error {
+func (s *PostgresStorage) DeleteTicket(id int) error {
 	return types.ErrNotImplemented
 }
 

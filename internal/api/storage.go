@@ -9,8 +9,8 @@ type Storage interface {
 	SeeQueue() ([]int, error)
 
 	CreateTicket(ticketCreate types.TicketCreate) (types.Ticket, error)
-	GetTicket(ticketID int) (types.Ticket, error)
-	DeleteTicket(ticketID int) error
+	GetTicket(id int) (types.Ticket, error)
+	DeleteTicket(id int) error
 
 	CreateCategory(name string) (types.Category, error)
 	GetCategory(id int) (types.Category, error)

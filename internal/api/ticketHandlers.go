@@ -29,8 +29,10 @@ func (s *APIServer) getTicket(w http.ResponseWriter, r *http.Request) error {
 
 	ticket, err := s.storage.GetTicket(ticketID)
 	if err != nil {
-		errBody := badValidationString("category")
-		return writeJSON(w, http.StatusInternalServerError, errBody, s.logger)
+		if err == types.ErrnotFound {
+			return writeJSON(w, http.StatusNotFound, err, s.logger)
+		}
+		return writeJSON(w, http.StatusBadRequest, badValidationString("ticket"), s.logger)
 	}
 
 	return writeJSON(w, http.StatusOK, ticket, s.logger)
@@ -90,6 +92,7 @@ func (s *APIServer) createTicket(w http.ResponseWriter, r *http.Request) error {
 		ticket, err = s.storage.CreateTicket(types.TicketCreate{CategoryID: requestBody.CategoryID, SubURL: randomString()})
 
 		if err != nil {
+			s.logger.Debugw("Error seen in CreateTicket", "error", err)
 			if strings.HasPrefix(err.Error(), pqUniqueConstraintViolation) {
 				s.logger.Tracew("Failed to create a unique ticket url, retrying", "error", err, "sub_url", ticket.SubURL, "category_id", ticket.CategoryID)
 				continue
