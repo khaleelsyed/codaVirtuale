@@ -7,7 +7,7 @@ import (
 
 var ErrNotImplemented = errors.New("not implemented")
 var ErrNotFound = errors.New("not found")
-var ErrFailedToDelete = errors.New("failed to delete")
+var ErrNoRowsAffected = errors.New("no rows affected")
 var errDeskNull = errors.New("sql: Scan error on column index 3, name \"desk_id\": converting NULL to int is unsupported")
 
 func errAffectedMultipleRows(operation string) error {

@@ -15,6 +15,38 @@ type PostgresStorage struct {
 }
 
 func (s *PostgresStorage) CallNextTicket(deskID int) (types.Ticket, error) {
+	query := `UPDATE ticket t
+	SET desk_id = $1
+	FROM desk d
+	WHERE d.id = $1
+	  AND t.category_id = d.category_id
+	  AND t.closed = FALSE
+	  AND t.desk_id IS NULL
+	  AND t.id = (
+	    SELECT id
+	    FROM ticket
+	    WHERE category_id = d.category_id
+	      AND closed = FALSE
+	      AND desk_id IS NULL
+	    ORDER BY created_at
+	    LIMIT 1
+	  )
+	RETURNING t.id, t.category_id, t.sub_url, t.desk_id, t.closed, t.created_at;`
+
+	result, err := s.db.Exec(query, deskID)
+	if err != nil {
+		s.logger.Warnw("error with CallNextTicket", "desk_id", deskID, "error", err)
+	}
+
+	if err = checkSingleRowAffected(result, deskID, "CallNextTicket", s.logger); err != nil {
+		if err == ErrNoRowsAffected {
+			return types.Ticket{}, types.ErrnotFound
+		}
+
+		return types.Ticket{}, err
+	}
+
+	result.RowsAffected()
 
 	return types.Ticket{}, types.ErrNotImplemented
 }
@@ -245,7 +277,7 @@ func checkSingleRowAffected(result sql.Result, id int, operation string, logger 
 		return nil
 	case 0:
 		logger.Warnw(fmt.Sprintf("failed to perform %s", operation), "id", id, "RowsAffected", rowsAffected, "error", nil)
-		return ErrFailedToDelete
+		return ErrNoRowsAffected
 	default:
 		err = errAffectedMultipleRows(operation)
 		logger.Errorw(err.Error(), "id", id, "RowsAffected", rowsAffected)
