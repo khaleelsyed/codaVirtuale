@@ -20,69 +20,6 @@ func (s MockStorage) CallNextTicket(deskID int) (types.Ticket, error) {
 	}, nil
 }
 
-func (s MockStorage) LastCalled(categoryID int, positions int) ([]types.Ticket, error) {
-	tickets := []types.Ticket{
-		{
-			ID:         1,
-			CategoryID: categoryID,
-			SubURL:     "hjkl1",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         2,
-			CategoryID: categoryID,
-			SubURL:     "hjkl2",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         3,
-			CategoryID: categoryID,
-			SubURL:     "hjkl1",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         4,
-			CategoryID: categoryID,
-			SubURL:     "hjkl4",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         5,
-			CategoryID: categoryID,
-			SubURL:     "hjkl5",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         6,
-			CategoryID: categoryID,
-			SubURL:     "hjkl6",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         7,
-			CategoryID: categoryID,
-			SubURL:     "hjkl7",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-		{
-			ID:         8,
-			CategoryID: categoryID,
-			SubURL:     "hjkl8",
-			DeskID:     1,
-			CreatedAt:  time.Now(),
-		},
-	}
-
-	return tickets[:positions], nil
-}
-
 func (s MockStorage) SeeNext(categoryID int) (types.Ticket, error) {
 
 	return types.Ticket{

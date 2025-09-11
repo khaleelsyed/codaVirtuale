@@ -4,7 +4,6 @@ import "github.com/khaleelsyed/codaVirtuale/internal/types"
 
 type Storage interface {
 	CallNextTicket(deskID int) (types.Ticket, error)
-	LastCalled(categoryID int, positions int) ([]types.Ticket, error)
 	SeeNext(categoryID int) (types.Ticket, error)
 	SeeQueue() ([]int, error)
 

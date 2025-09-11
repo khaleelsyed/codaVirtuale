@@ -19,12 +19,6 @@ func (s *PostgresStorage) CallNextTicket(deskID int) (types.Ticket, error) {
 	return types.Ticket{}, types.ErrNotImplemented
 }
 
-func (s *PostgresStorage) LastCalled(categoryID int, positions int) ([]types.Ticket, error) {
-	tickets := []types.Ticket{}
-
-	return tickets[:positions], types.ErrNotImplemented
-}
-
 func (s *PostgresStorage) SeeNext(categoryID int) (types.Ticket, error) {
 
 	return types.Ticket{}, types.ErrNotImplemented
