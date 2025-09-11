@@ -12,7 +12,6 @@ import (
 
 func (s *APIServer) addStaffRoutes(router *mux.Router) {
 	router.HandleFunc("/next", makeHTTPHandler(s.handleNext, []string{http.MethodPut, http.MethodGet}, s.logger))
-	router.HandleFunc("/last", makeHTTPHandler(s.getLastCalled, []string{http.MethodGet}, s.logger))
 	router.HandleFunc("/queue", makeHTTPHandler(s.getQueue, []string{http.MethodGet}, s.logger))
 }
 
@@ -36,36 +35,6 @@ func (s *APIServer) putNextTicket(w http.ResponseWriter, r *http.Request) error 
 	}
 
 	return writeJSON(w, http.StatusOK, nextTicket, s.logger)
-}
-
-func (s *APIServer) getLastCalled(w http.ResponseWriter, r *http.Request) error {
-	var err error
-
-	var requestBody struct {
-		CategoryID int `json:"category_id"`
-		Positions  int `json:"positions"`
-	}
-
-	if err = json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		return writeJSON(w, http.StatusBadRequest, errBadRequestBody, s.logger)
-	}
-
-	if _, err = s.storage.GetCategory(requestBody.CategoryID); err != nil {
-		errBody := badValidationString("category")
-		return writeJSON(w, http.StatusBadRequest, errors.New(errBody), s.logger)
-	}
-
-	tickets, err := s.storage.LastCalled(requestBody.CategoryID, requestBody.Positions)
-	if err != nil {
-		return writeJSON(w, http.StatusInternalServerError, err, s.logger)
-	}
-
-	ticketIDs := make([]int, requestBody.Positions)
-	for i, ticket := range tickets {
-		ticketIDs[i] = ticket.QueueNumber
-	}
-
-	return writeJSON(w, http.StatusOK, ticketIDs, s.logger)
 }
 
 func (s *APIServer) getNext(w http.ResponseWriter, r *http.Request) error {

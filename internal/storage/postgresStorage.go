@@ -34,8 +34,23 @@ func (s *PostgresStorage) SeeQueue() ([]int, error) {
 	return []int{}, types.ErrNotImplemented
 }
 
-func (s *PostgresStorage) CreateTicket(categoryID int) (types.Ticket, error) {
-	return types.Ticket{}, types.ErrNotImplemented
+func (s *PostgresStorage) CreateTicket(ticketCreate types.TicketCreate) (types.Ticket, error) {
+	result, err := s.db.Query("INSERT INTO ticket (category_id, sub_url) VALUES ($1, $2) RETURNING id, category_id, sub_url, desk_id, closed, created_at", ticketCreate.CategoryID, ticketCreate.SubURL)
+	if err != nil {
+		s.logger.Warnw("could not create ticket", "error", err)
+		return types.Ticket{}, err
+	}
+	defer result.Close()
+
+	var ticket types.Ticket
+
+	for result.Next() {
+		if err = result.Scan(&ticket.ID, &ticket.CategoryID, &ticket.SubURL, &ticket.DeskID, &ticket.Closed, &ticket.CreatedAt); err != nil {
+			return types.Ticket{}, err
+		}
+	}
+
+	return ticket, nil
 }
 
 func (s *PostgresStorage) GetTicket(ticketID int) (types.Ticket, error) {
@@ -228,7 +243,7 @@ func (s *PostgresStorage) createDeskTable() error {
 	query := `CREATE TABLE IF NOT EXISTS desk(
 	id SERIAL PRIMARY KEY,
 	label VARCHAR(50) NOT NULL,
-	category_id SERIAL REFERENCES category(id) ON DELETE RESTRICT
+	category_id INT REFERENCES category(id) ON DELETE RESTRICT
 	)`
 
 	_, err := s.db.Exec(query)
@@ -238,10 +253,9 @@ func (s *PostgresStorage) createDeskTable() error {
 func (s *PostgresStorage) createTicketTable() error {
 	query := `CREATE TABLE IF NOT EXISTS ticket(
 	id SERIAL PRIMARY KEY,
-	category_id SERIAL REFERENCES category(id),
+	category_id INT REFERENCES category(id),
 	sub_url TEXT UNIQUE,
-	queue_number SERIAL,
-	desk_id SERIAL REFERENCES desk(id),
+	desk_id INT REFERENCES desk(id),
 	closed BOOLEAN NOT NULL DEFAULT FALSE,
 	created_at TIMESTAMP NOT NULL DEFAULT NOW()
 	)`
