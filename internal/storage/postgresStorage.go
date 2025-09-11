@@ -79,7 +79,16 @@ func (s *PostgresStorage) GetTicket(id int) (types.Ticket, error) {
 }
 
 func (s *PostgresStorage) DeleteTicket(id int) error {
-	return types.ErrNotImplemented
+	query := `DELETE FROM ticket
+	WHERE id = $1;`
+
+	result, err := s.db.Exec(query, id)
+	if err != nil {
+		s.logger.Tracew("error deleting ticket", "id", id, "error", err)
+		return err
+	}
+
+	return checkSingleRowAffected(result, id, "DeleteTicket", s.logger)
 }
 
 func (s *PostgresStorage) CreateCategory(name string) (types.Category, error) {
